@@ -23,9 +23,7 @@ function UserList() {
       {users.map(user => (
         <div>
           <Link to={`/users/${user.id}`}>
-            <button onClick={localStorage.setItem("userID", user.id)}>
-              {user.name}
-            </button>
+            <button>{user.name}</button>
           </Link>
         </div>
       ))}

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-function User() {
+function User(props) {
   const [posts, setPosts] = useState([]);
-  const id = localStorage.getItem("user");
+  const id = props.match.params.id;
+  console.log(posts);
 
   useEffect(() => {
     axios
@@ -17,7 +18,10 @@ function User() {
 
   return (
     <div>
-      <h1>{posts}</h1>
+      <h1>User's Posts</h1>
+      {posts.map(post => {
+        return <p>{post.text}</p>;
+      })}
     </div>
   );
 }
