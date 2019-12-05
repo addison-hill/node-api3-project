@@ -4,6 +4,7 @@ const cors = require("cors");
 
 const userRouter = require("./users/userRouter");
 const postRouter = require("./posts/postRouter");
+const db = require("./users/userDb");
 
 const server = express();
 
@@ -15,7 +16,16 @@ server.use("/users", userRouter);
 server.use("/users/:id/posts", postRouter);
 
 server.get("/", (req, res) => {
-  res.send(`<h2>Let's write some middleware!</h2>`);
+  const message = process.env.MSG || "Hello World";
+
+  db.get(req.query)
+    .then(users => {
+      res.status(200).json({ message, users });
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: "Error getting the users" });
+    });
 });
 
 //custom middleware
