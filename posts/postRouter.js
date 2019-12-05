@@ -18,7 +18,7 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", validatePostId, (req, res) => {
   db.getById(req.params.id)
     .then(post => {
       res.status(200).json(post);
@@ -29,7 +29,7 @@ router.get("/:id", (req, res) => {
     });
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", validatePostId, (req, res) => {
   db.remove(req.params.id)
     .then(count => {
       if (count > 0) {
@@ -44,7 +44,7 @@ router.delete("/:id", (req, res) => {
     });
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", validatePostId, (req, res) => {
   db.update(req.params.id, req.body)
     .then(post => {
       if (post) {
@@ -62,7 +62,19 @@ router.put("/:id", (req, res) => {
 // custom middleware
 
 function validatePostId(req, res, next) {
-  // do your magic!
+  db.getById(req.params.id)
+    .then(post => {
+      if (post) {
+        req.post = post;
+        next();
+      } else {
+        res.status(404).json({ message: "invalid post ID" });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: "Error validating post ID" });
+    });
 }
 
 module.exports = router;

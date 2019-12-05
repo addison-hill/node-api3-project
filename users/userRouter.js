@@ -4,7 +4,7 @@ const postDb = require("../posts/postDb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.post("/", validateUser, (req, res) => {
   db.insert(req.body)
     .then(user => {
       res.status(201).json(user);
@@ -15,7 +15,7 @@ router.post("/", (req, res) => {
     });
 });
 
-router.post("/:id/posts", (req, res) => {
+router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
   const postInfo = { ...req.body, user_id: req.params.id };
   postDb
     .insert(postInfo)
@@ -39,7 +39,7 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", validateUserId, (req, res) => {
   db.getById(req.params.id)
     .then(user => {
       if (user) {
@@ -54,7 +54,7 @@ router.get("/:id", (req, res) => {
     });
 });
 
-router.get("/:id/posts", (req, res) => {
+router.get("/:id/posts", validateUserId, (req, res) => {
   db.getUserPosts(req.params.id)
     .then(posts => {
       if (posts) {
@@ -69,7 +69,7 @@ router.get("/:id/posts", (req, res) => {
     });
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", validateUserId, (req, res) => {
   db.remove(req.params.id)
     .then(count => {
       if (count > 0) {
@@ -84,7 +84,7 @@ router.delete("/:id", (req, res) => {
     });
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", validateUserId, (req, res) => {
   db.update(req.params.id, req.body)
     .then(user => {
       if (user) {
@@ -101,23 +101,42 @@ router.put("/:id", (req, res) => {
 
 //custom middleware
 
-function validateUserId(id) {
-  return function(req, res, next) {
-    if (id === req.headers.id) {
-      res.send(req.body);
+function validateUserId(req, res, next) {
+  db.getById(req.params.id)
+    .then(user => {
+      if (user) {
+        req.user = user;
+      } else {
+        res.status(404).json({ message: "invalid user ID" });
+      }
       next();
-    } else {
-      res.status(400).json({ message: "invalid user id" });
-    }
-  };
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({ message: "Error validating user ID" });
+    });
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  if (!req.body) {
+    res.status(400).json({ message: "missing user data" });
+  }
+  if (!req.body.name) {
+    res.status(400).json({ message: "missing required name field" });
+  } else {
+    next();
+  }
 }
 
 function validatePost(req, res, next) {
-  // do your magic!
+  if (!req.body) {
+    res.status(400).json({ message: "Missing post data" });
+  }
+  if (!req.body.text) {
+    res.status(400).json({ message: "Missing required text field" });
+  } else {
+    next();
+  }
 }
 
 module.exports = router;
